@@ -4,7 +4,7 @@
  * GroundHumedity: A0
  * Water Bomb = D36
  * Light = D37
- * Ground Humedity = A0
+ * Ground Humedity = D41
  * Water Temp = D40
  * RTC SDA = A4
  * RTC SDC = A5
@@ -27,7 +27,7 @@
 
 int watterBombPin = 36;
 int lightPin = 37 ;
-int groundHumedityPin=A0;
+int groundHumedityPin=41;
 int watterTempPin = 40;
 int RTCSDAPin = A4;
 int RTCSCLPin = A5;
@@ -64,6 +64,7 @@ void setup() {
   Serial.begin(9600); //Serial debug messages
   pinMode(watterBombPin, OUTPUT); //PinMode for the watter dispenser
   pinMode(lightPin, OUTPUT); //PinMode for the Sodium light
+  pinMode(groundHumedityPin, INPUT_PULLUP);
   pinMode(13, OUTPUT);
   digitalWrite(watterBombPin, HIGH); //HIGH is OFF for the relee
   digitalWrite(lightPin, HIGH);   //HIGH is OFF for the relee
@@ -142,24 +143,24 @@ void sensorsInfo()
   Serial.println(second);
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("Humidity:");
+  lcd.print("Humedad:");
   lcd.print(getHumidity());
   lcd.print(" %"); 
   lcd.setCursor(0,1);
-  lcd.print("Temp:");
+  lcd.print("Temperatura:");
   lcd.print(getTemp());
   lcd.print(" *C");  
   delay(delayLCD);
   updateDate();
   lcd.clear();
-  lcd.print("Date: ");
+  lcd.print("Fecha: ");
   lcd.print(monthDay);
   lcd.print("/");
   lcd.print(month);
   lcd.print("/");
   lcd.print(year);
   lcd.setCursor(0,1);
-  lcd.print("Hour: ");
+  lcd.print("Hora: ");
   lcd.print(hour);
   lcd.print(":");
   lcd.print(minute);
@@ -167,12 +168,12 @@ void sensorsInfo()
   lcd.print(second);
   delay(delayLCD);
   lcd.clear();
-  lcd.print("Watter: ");
+  lcd.print("Temp Agua: ");
   lcd.print(getWatterTemperature());
   lcd.print("*C");
   lcd.setCursor(0,1);
-  lcd.print("Ground Hum: ");
-  lcd.print(getGroundHumidity());
+  lcd.print("Humedad Tierra: ");
+  lcd.print(getGroundHumidity()); //0 is good. 1 is bad
   lcd.print("%");
 }
 
@@ -183,18 +184,18 @@ void loop() {
   {
     Serial.println("Lights OFF");
     lcd.clear();
-    lcd.print("Event:");
+    lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Lights OFF");
+    lcd.print("Luces OFF");
     turnLights(false);  
   }
   else
   {
     Serial.println("Lights ON");
     lcd.clear();
-    lcd.print("Event:");
+    lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Lights ON");
+    lcd.print("Luces ON");
     turnLights(true);
   }
   delay(delayLCD);
@@ -202,19 +203,20 @@ void loop() {
   {
     Serial.println("Watter ON");
     lcd.clear();
-    lcd.print("Event:");
+    lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Watter ON");
+    lcd.print("Agua ON");
     turnWatterBomb(true);
-
+    delay(20000);
+    turnWatterBomb(false);
   }
   else
   {
     Serial.println("Watter OFF");
     lcd.clear();
-    lcd.print("Event:");
+    lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Watter OFF");
+    lcd.print("Agua OFF");
     turnWatterBomb(false);
   }
   delay(delayLCD);
@@ -222,17 +224,17 @@ void loop() {
   {
     Serial.println("The room temperature is too low, sending an alarm");
     lcd.clear();
-    lcd.print("Event:");
+    lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Room temp is LOW");  
+    lcd.print("Temperatura BAJA");  
   }
   else
   {
     Serial.println("The room temperature is OK");
     lcd.clear();
-    lcd.print("Event:");
+    lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Room temp is OK.");  
+    lcd.print("Temperatura OK.");  
   }
   delay(delayLCD);
 
@@ -240,38 +242,33 @@ void loop() {
   {
     Serial.println("Watter is cold");
     lcd.clear();
-    lcd.print("Event:");
+    lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Watter temp COLD");
+    lcd.print("Agua FRIA");
   }
   else
   {
     Serial.println("Watter is OK");
     lcd.clear();
-    lcd.print("Event:");
+    lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Watter temp OK");
+    lcd.print("Agua OK");
   }
   delay(delayLCD);
-  /*
-  if(getGroundHumidity()<40)
-   {
-   Serial.println("The indoor does not have sufficient watter. Starting up watter bomb");
-   lcd.clear();
-   lcd.print("Event:");
-   lcd.setCursor(0,1);
-   lcd.print("Watter bomb ON");
-   turnWatterBomb(true);
-   }
-   else
-   {
-   turnWatterBomb(false);
-   lcd.clear();
-   lcd.print("Event:");
-   lcd.setCursor(0,1);
-   lcd.print("Watter bomb OFF");
-   }
-   */
+  if(getGroundHumidity()==0)
+  {
+    lcd.clear();
+    lcd.print("Evento:");
+    lcd.setCursor(0,1);
+    lcd.print("Tengo Agua");
+  }
+  else
+  {
+    lcd.clear();
+    lcd.print("Evento:");
+    lcd.setCursor(0,1);
+    lcd.print("Me Falta Agua");
+  }
   delay(delayLCD);
 }
 void turnWatterBomb(boolean t)
@@ -310,9 +307,8 @@ int getHumidity()
 
 int getGroundHumidity()
 {
-  int sensorValue = analogRead(A0);
-  int percent = map(sensorValue,0,1023,100,0);
-  return percent;  
+  int sensorValue = digitalRead(groundHumedityPin);
+  return sensorValue;  
 }
 
 int getWatterTemperature()

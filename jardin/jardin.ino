@@ -44,8 +44,7 @@ int lightHourOff = 1;
 
 //parameters for schedule the watter (as the fucking soil sensor is unreliable)
 int watterHourON = 1;
-int watterMinuteON = 30;
-int watterDuration= 1;
+int watterMinuteON = 10;
 
 //parameters for delay
 int delayLCD = 1500;
@@ -199,7 +198,7 @@ void loop() {
     turnLights(true);
   }
   delay(delayLCD);
-  if(hour==watterHourON && minute == watterMinuteON)
+  if((hour==watterHourON && minute == watterMinuteON)||(hour==10 && minute == 00) )
   {
     Serial.println("Watter ON");
     lcd.clear();

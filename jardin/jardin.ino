@@ -39,12 +39,11 @@ OneWire ds(watterTempPin);  // on pin 10 (a 4.7K resistor is necessary)
 static float celsius;
 
 //parameters for schedule the lights
-int lightHourOn = 7;
-int lightHourOff = 1;
+int lightHourOn = 6;
+int lightHourOff = 12;
 
-//parameters for schedule the watter (as the fucking soil sensor is unreliable)
-int watterHourON = 1;
-int watterMinuteON = 10;
+//parameters for watter
+boolean alreadyWatering=false;
 
 //parameters for delay
 int delayLCD = 1500;
@@ -198,8 +197,10 @@ void loop() {
     turnLights(true);
   }
   delay(delayLCD);
-  if((hour==watterHourON && minute == watterMinuteON)||(hour==10 && minute == 00) )
+  //Fix: Watter in 5 days
+  if(monthDay % 5 == 0 && alreadyWatering == false)
   {
+    alreadyWatering = true; //this is to avoid watering more than 1 time
     Serial.println("Watter ON");
     lcd.clear();
     lcd.print("Evento:");
@@ -208,9 +209,11 @@ void loop() {
     turnWatterBomb(true);
     delay(20000);
     turnWatterBomb(false);
+    delay(40000);
   }
   else
   {
+    alreadyWatering = false;
     Serial.println("Watter OFF");
     lcd.clear();
     lcd.print("Evento:");
@@ -225,7 +228,7 @@ void loop() {
     lcd.clear();
     lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Temperatura BAJA");  
+    lcd.print("Temp BAJA");  
   }
   else
   {
@@ -233,7 +236,7 @@ void loop() {
     lcd.clear();
     lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Temperatura OK.");  
+    lcd.print("Temperatura OK");  
   }
   delay(delayLCD);
 
@@ -251,7 +254,7 @@ void loop() {
     lcd.clear();
     lcd.print("Evento:");
     lcd.setCursor(0,1);
-    lcd.print("Agua OK");
+    lcd.print("Agua TEMPLADA");
   }
   delay(delayLCD);
   if(getGroundHumidity()==0)

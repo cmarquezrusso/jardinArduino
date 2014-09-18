@@ -14,7 +14,9 @@
 #include <OneWire.h>
 #include "DHT.h"
 #include "Wire.h"
+#include "pitches.h"
 
+#define melodyPin 42
 #define DS1307_ADDRESS 0x68
 #define DHTPIN 2     // what pin we're connected to
 #define DHTTYPE DHT11   // DHT 11 
@@ -39,8 +41,8 @@ OneWire ds(watterTempPin);  // on pin 10 (a 4.7K resistor is necessary)
 static float celsius;
 
 //parameters for schedule the lights
-int lightHourOn = 6;
-int lightHourOff = 12;
+int lightHourOn = 8;
+int lightHourOff = 20;
 
 //parameters for watter
 boolean alreadyWatering=false;
@@ -58,6 +60,14 @@ int monthDay ;
 int month;
 int year;
 
+
+//variable for debug
+unsigned int loopcount;
+//Music
+//Mario main theme melody
+
+
+
 void setup() {           
   Serial.begin(9600); //Serial debug messages
   pinMode(watterBombPin, OUTPUT); //PinMode for the watter dispenser
@@ -70,6 +80,7 @@ void setup() {
   dht.begin(); //DHT library
   lcd.begin(16, 2); //LCD library
   startUpInfo(); //LCD and Serial messages
+  loopcount=0;
 }
 
 void startUpInfo()
@@ -104,7 +115,7 @@ void startUpInfo()
 void cursorBlink()
 {
   for(int i=0;i<3;i++)
-  {
+  {  
     lcd.noBlink();
     delay(300);
     // Turn on the blinking cursor:
@@ -170,12 +181,13 @@ void sensorsInfo()
   lcd.print(getWatterTemperature());
   lcd.print("*C");
   lcd.setCursor(0,1);
-  lcd.print("Humedad Tierra: ");
+  lcd.print("Hum. Tierra: ");
   lcd.print(getGroundHumidity()); //0 is good. 1 is bad
   lcd.print("%");
 }
 
 void loop() {
+  loopcount++;
   sensorsInfo();
   delay(delayLCD);
   if(hour>=lightHourOff && hour < lightHourOn )
@@ -198,6 +210,7 @@ void loop() {
   }
   delay(delayLCD);
   //Fix: Watter in 5 days
+  /**
   if(monthDay % 5 == 0 && alreadyWatering == false)
   {
     alreadyWatering = true; //this is to avoid watering more than 1 time
@@ -221,6 +234,7 @@ void loop() {
     lcd.print("Agua OFF");
     turnWatterBomb(false);
   }
+  **/
   delay(delayLCD);
   if(getTemp()<=20)
   {
@@ -272,6 +286,14 @@ void loop() {
     lcd.print("Me Falta Agua");
   }
   delay(delayLCD);
+    lcd.clear();
+    lcd.print("Loop count:");
+    lcd.setCursor(0,1);
+    lcd.print(loopcount);
+  delay(delayLCD);
+  debug();
+  delay(delayLCD);
+  
 }
 void turnWatterBomb(boolean t)
 {
@@ -399,4 +421,21 @@ void updateDate(){
   monthDay = bcdToDec(Wire.read());
   month = bcdToDec(Wire.read());
   year = bcdToDec(Wire.read());
+}
+void debug()
+{
+   Serial.println("Second");
+   Serial.println(second);
+    Serial.println("minute");
+    Serial.println(minute);
+    Serial.println("hour");
+    Serial.println(hour);
+    Serial.println("weekday");
+    Serial.println(weekDay);
+    Serial.println("monthDay");
+    Serial.println(monthDay);
+    Serial.println("month");
+    Serial.println(month);
+    Serial.println("year");
+    Serial.println(year);
 }
